@@ -17,6 +17,7 @@ class AutoRiaSpider(scrapy.Spider):
         options = Options()
         options.add_argument('--headless=new')
         self.driver = webdriver.Chrome(options=options)
+        self.count = 0
 
     def parse(self, response: Response, **kwargs):
         product_links = response.css(".ticket-title a::attr(href)").getall()
@@ -28,7 +29,9 @@ class AutoRiaSpider(scrapy.Spider):
             )
         # next_page_link = response.css("a.js-next::attr(href)").get()
         # if next_page_link:
-        #    yield scrapy.Request(url=next_page_link, callback=self.parse)
+        #     self.count += 1
+        #     if self.count < 10:
+        #         yield scrapy.Request(url=next_page_link, callback=self.parse)
 
     @staticmethod
     def all_non_empty_data_value(driver) -> list | bool:
@@ -56,6 +59,10 @@ class AutoRiaSpider(scrapy.Spider):
         price_usd = response.css(".price.mb-15.mhide strong::text").get()
         odometer = response.css(".price.mb-15.mhide .base-information span::text").get()
         username = response.css(".seller_info_name.bold::text").get()
+        image_url = response.css(".gallery-order.carousel source::attr(srcset)").get()
+        image_count = response.css(".gallery-order.carousel .mhide::text").get()
+        car_number = response.css(".state-num::text").get()
+        car_vin = response.css(".t-check .label-vin::text, .vin-code::text").get()
 
         wait = WebDriverWait(self.driver, 10)
         self.driver.get(response.meta.get("url"))
@@ -71,7 +78,11 @@ class AutoRiaSpider(scrapy.Spider):
             "price_usd": int(price_usd[:len(price_usd) - 1].replace(" ", "")),
             "odometer": int(odometer + "000"),
             "username": username,
-            "phones": self.string_phones_to_int(phones)
+            "phones": self.string_phones_to_int(phones),
+            "image_url": image_url,
+            "image_count": image_count[2:],
+            "car_number": car_number,
+            "car_vin": car_vin,
         }
 
     def closed(self, reason) -> None:
