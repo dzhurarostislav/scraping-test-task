@@ -27,11 +27,11 @@ class AutoRiaSpider(scrapy.Spider):
                 callback=self.parse_product,
                 meta={"url": product_link}
             )
-        # next_page_link = response.css("a.js-next::attr(href)").get()
-        # if next_page_link:
-        #     self.count += 1
-        #     if self.count < 10:
-        #         yield scrapy.Request(url=next_page_link, callback=self.parse)
+        next_page_link = response.css("a.js-next::attr(href)").get()
+        if next_page_link:
+            self.count += 1
+            if self.count < 10:
+                yield scrapy.Request(url=next_page_link, callback=self.parse)
 
     @staticmethod
     def all_non_empty_data_value(driver) -> list | bool:
@@ -74,13 +74,13 @@ class AutoRiaSpider(scrapy.Spider):
 
         yield {
             "url": response.meta.get("url"),
-            "text": title,
+            "title": title,
             "price_usd": int(price_usd[:len(price_usd) - 1].replace(" ", "")),
             "odometer": int(odometer + "000"),
             "username": username,
-            "phones": self.string_phones_to_int(phones),
+            "phone_number": self.string_phones_to_int(phones),
             "image_url": image_url,
-            "image_count": image_count[2:],
+            "images_count": image_count[2:],
             "car_number": car_number,
             "car_vin": car_vin,
         }
