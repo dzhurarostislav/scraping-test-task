@@ -1,0 +1,2 @@
+35 14 * * * /usr/local/bin/python /app/auto_ria/spiders/auto_ria_spider.py >> /app/cron.log 2>&1
+45 14 * * * /usr/bin/pg_dump -h postgres -U user -d database -Fc -f /app/dumps/dump_$(date +\%Y\%m\%d\%H\%M\%S).dump >> /app/cron.log 2>&1

@@ -2,23 +2,36 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-
+import os
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 import psycopg2
 from psycopg2 import sql
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class AutoRiaPipeline:
 
     def __init__(self):
-        hostname = "localhost"
-        username = "postgres"
-        password = ""  # your password
-        database = "AutoRiaDB"
+        hostname = os.environ["HOSTNAME"]
+        username = os.environ["USER"]
+        password = os.environ["PASSWORD"]
+        database = os.environ["DATABASE"]
 
-        self.connection = psycopg2.connect(host=hostname, user=username, password=password, dbname=database)
+        print(f"Host: {hostname}")
+        print(f"User: {username}")
+        print(f"Password: {password}")
+        print(f"Database: {database}")
+
+        self.connection = psycopg2.connect(
+            host=hostname,
+            user=username,
+            password=password,
+            dbname=database,
+        )
 
         self.cur = self.connection.cursor()
 

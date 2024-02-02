@@ -30,7 +30,7 @@ class AutoRiaSpider(scrapy.Spider):
         next_page_link = response.css("a.js-next::attr(href)").get()
         if next_page_link:
             self.count += 1
-            if self.count < 10:
+            if self.count < 1:
                 yield scrapy.Request(url=next_page_link, callback=self.parse)
 
     @staticmethod
@@ -58,7 +58,8 @@ class AutoRiaSpider(scrapy.Spider):
         title = response.css(".ticket-status-0 .heading .head::text").get()
         price_usd = response.css(".price.mb-15.mhide strong::text").get()
         odometer = response.css(".price.mb-15.mhide .base-information span::text").get()
-        username = response.css(".seller_info_name.bold::text").get()
+        username = response.css(".seller_info_name::text").get()
+        company_name = response.css(".seller_info_name a::text").get()
         image_url = response.css(".gallery-order.carousel source::attr(srcset)").get()
         image_count = response.css(".gallery-order.carousel .mhide::text").get()
         car_number = response.css(".state-num::text").get()
@@ -77,7 +78,7 @@ class AutoRiaSpider(scrapy.Spider):
             "title": title,
             "price_usd": int(price_usd[:len(price_usd) - 1].replace(" ", "")),
             "odometer": int(odometer + "000"),
-            "username": username,
+            "username": username if username != " " or None else company_name,
             "phone_number": self.string_phones_to_int(phones),
             "image_url": image_url,
             "images_count": image_count[2:],
