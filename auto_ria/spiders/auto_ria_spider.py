@@ -17,7 +17,6 @@ class AutoRiaSpider(scrapy.Spider):
         options = Options()
         options.add_argument('--headless=new')
         self.driver = webdriver.Chrome(options=options)
-        self.count = 0
 
     def parse(self, response: Response, **kwargs):
         product_links = response.css(".ticket-title a::attr(href)").getall()
@@ -29,9 +28,7 @@ class AutoRiaSpider(scrapy.Spider):
             )
         next_page_link = response.css("a.js-next::attr(href)").get()
         if next_page_link:
-            self.count += 1
-            if self.count < 1:
-                yield scrapy.Request(url=next_page_link, callback=self.parse)
+            yield scrapy.Request(url=next_page_link, callback=self.parse)
 
     @staticmethod
     def all_non_empty_data_value(driver) -> list | bool:
@@ -54,6 +51,16 @@ class AutoRiaSpider(scrapy.Spider):
             int_phones.append(str_phone)
         return int_phones
 
+    def get_phones(self, response):
+        wait = WebDriverWait(self.driver, 10)
+        self.driver.get(response.meta.get("url"))
+
+        phone_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".phones_list.mb-15 .mhide")))
+        self.driver.execute_script("arguments[0].scrollIntoView(true);", phone_button)
+        phone_button.click()
+        phones = wait.until(lambda driver: self.all_non_empty_data_value(driver))
+        return phones
+
     def parse_product(self, response: Response, **kwargs):
         title = response.css(".ticket-status-0 .heading .head::text").get()
         price_usd = response.css(".price.mb-15.mhide strong::text").get()
@@ -65,13 +72,7 @@ class AutoRiaSpider(scrapy.Spider):
         car_number = response.css(".state-num::text").get()
         car_vin = response.css(".t-check .label-vin::text, .vin-code::text").get()
 
-        wait = WebDriverWait(self.driver, 10)
-        self.driver.get(response.meta.get("url"))
-
-        phone_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".phones_list.mb-15 .mhide")))
-        self.driver.execute_script("arguments[0].scrollIntoView(true);", phone_button)
-        phone_button.click()
-        phones = wait.until(lambda driver: self.all_non_empty_data_value(driver))
+        phones = self.get_phones(response)
 
         yield {
             "url": response.meta.get("url"),
